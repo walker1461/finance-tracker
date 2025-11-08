@@ -24,10 +24,17 @@ const server = http.createServer((req, res) => {
     let body = "";
     req.on("data", (chunk) => (body += chunk.toString()));
     req.on("end", () => {
-      const newTransaction = JSON.parse(body);
-      const id = addTransaction(newTransaction);
-      res.writeHead(201, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ id, message: "Transaction added" }));
+      try {
+        const newTransaction = JSON.parse(body);
+        const id = addTransaction(newTransaction);
+        res.writeHead(201, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ id, message: "Transaction added" }));
+        console.log("received: ", newTransaction);
+      } catch (err) {
+        console.error("Error handling POST:", err);
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Failed to add transaction" }));
+      }
     });
   } else if (req.url.startsWith("/transactions/") && req.method === "DELETE") {
     const id = Number(req.url.split("/")[2]);

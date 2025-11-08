@@ -14,20 +14,32 @@ db.exec(`
 `);
 
 export function addTransaction({ date, description, category, amount, type }) {
+  const categoryString = Array.isArray(category)
+    ? category.join(",")
+    : String(category);
+
+  console.log("inserting category string:", categoryString);
+
   const statement = db.prepare(`
     INSERT INTO transactions (date, description, category, amount, type)
     VALUES (?, ?, ?, ?, ?)
-    `);
-  const info = statement.run(date, description, category, amount, type);
+  `);
+
+  const info = statement.run(date, description, categoryString, amount, type);
+
   return info.lastInsertRowid;
 }
 
 export function getAllTransactions() {
-  const statement = db.prepare("SELECT * FROM transactions ORDER BY date DESC");
-  return statement.all();
+  const rows = db.prepare(`SELECT * FROM transactions`).all();
+  return rows.map((row) => ({
+    ...row,
+    category: row.category.split(",").map((c) => c.trim()),
+  }));
 }
 
 export function deleteTransaction(id) {
   const statement = db.prepare("DELETE FROM transactions WHERE id = ?");
   return statement.run(id);
+  return info.changes > 0;
 }
