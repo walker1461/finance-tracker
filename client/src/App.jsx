@@ -45,10 +45,6 @@ export default function App() {
       .catch(console.error);
   }
 
-  /*   function addTransaction(newTransaction) {
-    setTransactions((prev) => [...prev, newTransaction]);
-  } */
-
   return (
     <MantineProvider>
       <AppShell>
