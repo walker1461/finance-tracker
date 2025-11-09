@@ -43,3 +43,20 @@ export function deleteTransaction(id) {
   return statement.run(id);
   return info.changes > 0;
 }
+
+export function updateTransaction(
+  id,
+  { date, description, category, amount, type }
+) {
+  const statement = db.prepare(
+    `UPDATE transactions SET date = ?, description = ?, category = ?, amount = ?, type = ? WHERE id = ?`
+  );
+  return statement.run(
+    date,
+    description,
+    JSON.stringify(category),
+    amount,
+    type,
+    id
+  );
+}

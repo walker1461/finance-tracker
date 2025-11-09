@@ -3,11 +3,15 @@ import {
   getAllTransactions,
   addTransaction,
   deleteTransaction,
+  updateTransaction,
 } from "./database.js";
 
 const server = http.createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, DELETE, OPTIONS, PUT"
+  );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
@@ -35,6 +39,16 @@ const server = http.createServer((req, res) => {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Failed to add transaction" }));
       }
+    });
+  } else if (req.url.startsWith("/transactions/") && req.method === "PUT") {
+    const id = Number(req.url.split("/")[2]);
+    let body = "";
+    req.on("data", (chunk) => (body += chunk.toString()));
+    req.on("end", () => {
+      const updated = JSON.parse(body);
+      const changes = updateTransaction(id, updated);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(changes));
     });
   } else if (req.url.startsWith("/transactions/") && req.method === "DELETE") {
     const id = Number(req.url.split("/")[2]);

@@ -12,6 +12,7 @@ import TransactionList from "./components/TransactionList";
 
 export default function App() {
   const [transactions, setTransactions] = useState([]);
+  const BASE_URL = "http://localhost:5000";
 
   useEffect(() => {
     fetch("http://localhost:5000/transactions")
@@ -27,6 +28,21 @@ export default function App() {
     }).then(() => {
       setTransactions((prev) => [...prev, newTransaction]);
     });
+  }
+
+  async function deleteTransactionRequest(id) {
+    const res = await fetch(`${BASE_URL}/transactions/${id}`, {
+      method: "DELETE",
+    });
+    return res.json();
+  }
+
+  function handleDelete(id) {
+    deleteTransactionRequest(id)
+      .then(() => {
+        setTransactions((prev) => prev.filter((t) => t.id !== id));
+      })
+      .catch(console.error);
   }
 
   /*   function addTransaction(newTransaction) {
@@ -46,7 +62,10 @@ export default function App() {
           </Container>
           <Space h="xl" />
           <Space h="md" />
-          <TransactionList transactions={transactions} />
+          <TransactionList
+            transactions={transactions}
+            deleteTransaction={handleDelete}
+          />
         </Container>
       </AppShell>
     </MantineProvider>

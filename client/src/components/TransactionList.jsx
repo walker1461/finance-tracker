@@ -1,12 +1,14 @@
-import React from "react";
-import { Table, Badge } from "@mantine/core";
+import { React, useState } from "react";
+import { Table, Badge, ActionIcon, Group, Stack } from "@mantine/core";
+import { IconTrash } from "@tabler/icons-react";
 
 function formatCurrency(amount) {
   const absAmount = Math.abs(amount).toFixed(2);
   return amount < 0 ? `-$${absAmount}` : `$${absAmount}`;
 }
 
-export default function TransactionList({ transactions }) {
+export default function TransactionTable({ transactions, deleteTransaction }) {
+  const [hoveredId, setHoveredId] = useState(null);
   const categoryColors = {
     Subscription: "violet.3",
     Food: "orange.3",
@@ -20,64 +22,95 @@ export default function TransactionList({ transactions }) {
     "Tax return": "lime.3",
   };
 
-  const rows = transactions.map((transaction) => (
-    <Table.Tr key={transaction.description}>
-      <Table.Td>{transaction.date}</Table.Td>
-      <Table.Td>{transaction.description}</Table.Td>
-      <Table.Td>
-        {Array.isArray(transaction.category)
-          ? transaction.category.map((cat) => (
-              <Badge
-                key={cat}
-                size="lg"
-                radius="sm"
-                variant="light"
-                mr="xs"
-                mt="xs"
-                mb="xs"
-                color={categoryColors[cat] || "gray"}
-                style={{
-                  opacity: 0.9,
-                  fontWeight: 600,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "scale(1.05)";
-                  e.currentTarget.style.opacity = 1;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "scale(1)";
-                  e.currentTarget.style.opacity = 0.9;
-                }}
-              >
-                {cat}
-              </Badge>
-            ))
-          : transaction.category}
-      </Table.Td>
-      <Table.Td align="right">
-        <Badge
-          color={transaction.type === "Income" ? "green" : "red"}
-          variant="dot"
-          size="lg"
-          radius={4}
-        >
-          {formatCurrency(transaction.amount, transaction.type)}
-        </Badge>
-      </Table.Td>
-    </Table.Tr>
-  ));
-
   return (
-    <Table highlightOnHover>
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th>Date</Table.Th>
-          <Table.Th>Description</Table.Th>
-          <Table.Th>Categories</Table.Th>
-          <Table.Th style={{ textAlign: "right" }}>Amount</Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>{rows}</Table.Tbody>
-    </Table>
+    <div style={{ position: "relative" }}>
+      <Table
+        highlightOnHover
+        withColumnBorders={false}
+        verticalSpacing="sm"
+        style={{ width: "100%" }}
+      >
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Date</Table.Th>
+            <Table.Th>Description</Table.Th>
+            <Table.Th>Categories</Table.Th>
+            <Table.Th style={{ textAlign: "right" }}>Amount</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+
+        <Table.Tbody>
+          {transactions.map((t) => (
+            <Table.Tr
+              key={t.id}
+              onMouseEnter={() => setHoveredId(t.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              style={{ position: "relative" }}
+            >
+              <Table.Td>{t.date}</Table.Td>
+              <Table.Td>{t.description}</Table.Td>
+              <Table.Td>
+                <Group gap="xs">
+                  {Array.isArray(t.category)
+                    ? t.category.map((cat) => (
+                        <Badge
+                          key={cat}
+                          variant="light"
+                          size="lg"
+                          radius="sm"
+                          color={categoryColors[cat] || "gray"}
+                          styles={{
+                            opacity: 0.9,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {cat}
+                        </Badge>
+                      ))
+                    : t.category}
+                </Group>
+              </Table.Td>
+              <Table.Td style={{ textAlign: "right" }}>
+                <Badge
+                  color={t.type === "Income" ? "green" : "red"}
+                  variant="dot"
+                  size="lg"
+                  radius={4}
+                >
+                  {formatCurrency(t.amount, t.type)}
+                </Badge>
+
+                <ActionIcon
+                  variant="transparent"
+                  color="gray"
+                  size="md"
+                  radius="sm"
+                  onClick={() => deleteTransaction(hoveredId)}
+                  style={{
+                    position: "absolute",
+                    right: "-28px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    opacity: 0.4,
+                    transition: "opacity 0.15s, transform 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = 0.9;
+                    e.currentTarget.style.transform =
+                      "translateY(-50%) scale(1.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = 0.4;
+                    e.currentTarget.style.transform = "translateY(-50%)";
+                  }}
+                >
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </div>
   );
 }
