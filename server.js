@@ -1,4 +1,5 @@
-import http from "http";
+import express from "express";
+import cors from "cors";
 import {
   getAllTransactions,
   addTransaction,
@@ -6,60 +7,69 @@ import {
   updateTransaction,
 } from "./database.js";
 
-const server = http.createServer((req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, DELETE, OPTIONS, PUT"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-  if (req.method === "OPTIONS") {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-
-  if (req.url === "/transactions" && req.method === "GET") {
+// GET
+app.get("/transactions", (req, res) => {
+  try {
     const transactions = getAllTransactions();
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(transactions));
-  } else if (req.url === "/transactions" && req.method === "POST") {
-    let body = "";
-    req.on("data", (chunk) => (body += chunk.toString()));
-    req.on("end", () => {
-      try {
-        const newTransaction = JSON.parse(body);
-        const id = addTransaction(newTransaction);
-        res.writeHead(201, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ id, message: "Transaction added" }));
-        console.log("received: ", newTransaction);
-      } catch (err) {
-        console.error("Error handling POST:", err);
-        res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Failed to add transaction" }));
-      }
-    });
-  } else if (req.url.startsWith("/transactions/") && req.method === "PUT") {
-    const id = Number(req.url.split("/")[2]);
-    let body = "";
-    req.on("data", (chunk) => (body += chunk.toString()));
-    req.on("end", () => {
-      const updated = JSON.parse(body);
-      const changes = updateTransaction(id, updated);
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(changes));
-    });
-  } else if (req.url.startsWith("/transactions/") && req.method === "DELETE") {
-    const id = Number(req.url.split("/")[2]);
-    deleteTransaction(id);
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ message: "Transaction deleted" }));
-  } else {
-    res.writeHead(404, { "Content-Type": "text/plain" });
-    res.end("Not Found");
+    res.json(transactions);
+  } catch (err) {
+    console.error("GET error:", err);
+    res.status(500).json({ error: "Failed to fetch transactions" });
   }
 });
 
+// POST
+app.post("/transactions", (req, res) => {
+  try {
+    const { date, description, category, amount, type } = req.body;
+    console.log("Adding transaction:", req.body);
+
+    const id = addTransaction({
+      date,
+      description,
+      category,
+      amount,
+      type,
+    });
+
+    res.status(201).json({ message: "Transaction added", id });
+  } catch (err) {
+    console.error("POST error:", err);
+    res.status(500).json({ error: "Failed to add transaction" });
+  }
+});
+
+// DELETE
+app.delete("/transactions/:id", (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    console.log("Deleting transaction:", id);
+    deleteTransaction(id);
+
+    res.json({ message: "Transaction deleted" });
+  } catch (err) {
+    console.error("DELETE error:", err);
+    res.status(500).json({ error: "Failed to delete transaction" });
+  }
+});
+
+// PUT
+app.put("/transactions/:id", (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    let body = "";
+    const updated = JSON.parse(body);
+    const changes = updateTransaction(id, updated);
+
+    res.json({ message: "Transaction edited" });
+  } catch (err) {
+    console.error("PUT error:", err);
+    res.status(500).json({ error: "Failed to edit transactions" });
+  }
+});
 const PORT = 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`(express) server started on port ${PORT}`));
