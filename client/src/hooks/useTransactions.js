@@ -5,6 +5,11 @@ export async function fetchTransactions() {
   return res.json();
 }
 
+/* export async function fetchSingleTransaction(id) {
+  const res = await fetch(`${BASE_URL}/transactions/${id}`);
+  return res.json();
+} */
+
 export async function addTransaction(transaction) {
   const res = await fetch(`${BASE_URL}/transactions`, {
     method: "POST",
@@ -17,6 +22,15 @@ export async function addTransaction(transaction) {
 export async function deleteTransactionRequest(id) {
   const res = await fetch(`${BASE_URL}/transactions/${id}`, {
     method: "DELETE",
+  });
+  return res.json();
+}
+
+export async function updateTransaction(id, transaction) {
+  const res = await fetch(`${BASE_URL}/transactions/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(transaction),
   });
   return res.json();
 }

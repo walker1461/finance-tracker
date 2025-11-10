@@ -45,6 +45,18 @@ export default function App() {
       .catch(console.error);
   }
 
+  function updateTransaction(id, transaction) {
+    fetch(`${BASE_URL}/transactions/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(transaction),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setTransactions((prev) => prev.map((t) => (t.id === id ? data : t)));
+      });
+  }
+
   return (
     <MantineProvider>
       <AppShell>
@@ -61,6 +73,7 @@ export default function App() {
           <TransactionList
             transactions={transactions}
             deleteTransaction={handleDelete}
+            updateTransaction={updateTransaction}
           />
         </Container>
       </AppShell>
