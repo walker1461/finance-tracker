@@ -13,50 +13,77 @@ db.exec(`
     )
 `);
 
+export function getAllTransactions() {
+  const rows = db.prepare("SELECT * FROM transactions").all();
+  return rows.map((t) => ({
+    ...t,
+    category: parseCategory(t.category),
+  }));
+}
+
 export function addTransaction({ date, description, category, amount, type }) {
-  const categoryString = Array.isArray(category)
-    ? category.join(",")
-    : String(category);
-
-  console.log("inserting category string:", categoryString);
-
-  const statement = db.prepare(`
+  const stmt = db.prepare(`
     INSERT INTO transactions (date, description, category, amount, type)
     VALUES (?, ?, ?, ?, ?)
   `);
 
-  const info = statement.run(date, description, categoryString, amount, type);
+  const info = stmt.run(
+    date,
+    description,
+    JSON.stringify(category),
+    parseFloat(amount),
+    type
+  );
 
-  return info.lastInsertRowid;
+  return {
+    id: info.lastInsertRowid,
+    date,
+    description,
+    category,
+    amount: parseFloat(amount),
+    type,
+  };
 }
 
-export function getAllTransactions() {
-  const rows = db.prepare(`SELECT * FROM transactions`).all();
-  return rows.map((row) => ({
-    ...row,
-    category: row.category.split(",").map((c) => c.trim()),
-  }));
+function parseCategory(category) {
+  try {
+    const parsed = JSON.parse(category);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {
+    // not JSON
+  }
+  if (typeof category === "string" && category.includes(",")) {
+    return category.split(",").map((c) => c.trim());
+  }
+  return category ? [category] : [];
 }
 
 export function deleteTransaction(id) {
-  const statement = db.prepare("DELETE FROM transactions WHERE id = ?");
-  return statement.run(id);
-  return info.changes > 0;
+  const stmt = db.prepare("DELETE FROM transactions WHERE id = ?");
+  return stmt.run(id);
 }
 
 export function updateTransaction(
   id,
   { date, description, category, amount, type }
 ) {
-  const statement = db.prepare(
+  const stmt = db.prepare(
     `UPDATE transactions SET date = ?, description = ?, category = ?, amount = ?, type = ? WHERE id = ?`
   );
-  return statement.run(
+  stmt.run(
     date,
     description,
     JSON.stringify(category),
-    amount,
+    parseFloat(amount),
     type,
     id
   );
+  return {
+    date,
+    description,
+    category,
+    amount: parseFloat(amount),
+    type,
+    id,
+  };
 }
