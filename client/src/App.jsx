@@ -6,21 +6,22 @@ import {
   MantineProvider,
   Space,
 } from "@mantine/core";
-import React, { useEffect, useState } from "react";
+//import React, { useEffect, useState } from "react";
 import TransactionForm from "./components/TransactionForm";
 import TransactionList from "./components/TransactionList";
+import { useTransactions } from "./hooks/useTransactions";
 
 export default function App() {
-  const [transactions, setTransactions] = useState([]);
-  const BASE_URL = "http://localhost:5000";
+  const { transactions, addTransaction, deleteTransaction, updateTransaction } =
+    useTransactions();
 
-  useEffect(() => {
+  /*   useEffect(() => {
     fetch("http://localhost:5000/transactions")
       .then((res) => res.json())
       .then((data) => setTransactions(data));
-  }, []);
+  }, []); */
 
-  function addTransaction(newTransaction) {
+  /*  function addTransaction(newTransaction) {
     fetch("http://localhost:5000/transactions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -28,24 +29,27 @@ export default function App() {
     }).then(() => {
       setTransactions((prev) => [...prev, newTransaction]);
     });
-  }
+  } */
+  //let newTransaction = addTransaction(transactions);
+  //setTransactions((prev) => [...prev, newTransaction]);
 
-  async function deleteTransactionRequest(id) {
+  /*   async function deleteTransactionRequest(id) {
     const res = await fetch(`${BASE_URL}/transactions/${id}`, {
       method: "DELETE",
     });
     return res.json();
-  }
+  } */
 
-  function handleDelete(id) {
-    deleteTransactionRequest(id)
+  /*   function handleDelete(id) {
+    //deleteTransactionRequest(id)
+    deleteTransaction(id)
       .then(() => {
         setTransactions((prev) => prev.filter((t) => t.id !== id));
       })
       .catch(console.error);
-  }
+  } */
 
-  function updateTransaction(id, transaction) {
+  /*   function updateTransaction(id, transaction) {
     fetch(`${BASE_URL}/transactions/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -55,7 +59,7 @@ export default function App() {
       .then((data) => {
         setTransactions((prev) => prev.map((t) => (t.id === id ? data : t)));
       });
-  }
+  } */
 
   return (
     <MantineProvider>
@@ -72,7 +76,7 @@ export default function App() {
           <Space h="md" />
           <TransactionList
             transactions={transactions}
-            deleteTransaction={handleDelete}
+            deleteTransaction={deleteTransaction}
             updateTransaction={updateTransaction}
           />
         </Container>
